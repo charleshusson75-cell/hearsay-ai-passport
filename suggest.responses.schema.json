@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/hearsay/suggest.responses.schema.json",
+  "title": "AI Passport suggest responses",
+  "oneOf": [
+    { "$ref": "#/$defs/accepted" },
+    { "$ref": "#/$defs/provenanceRequired" },
+    { "$ref": "#/$defs/classRejected" },
+    { "$ref": "#/$defs/quarantined" }
+  ],
+
+  "$defs": {
+    "accepted": {
+      "title": "201 ACCEPTED",
+      "description": "Written, pending the holder's approval as today.",
+      "type": "object",
+      "required": ["status", "field", "provenance"],
+      "properties": {
+        "status": { "const": "accepted" },
+        "field": { "type": "string" },
+        "provenance": { "enum": ["declared", "attested", "observed", "inferred"] },
+        "expires": { "type": ["string", "null"], "format": "date-time" },
+        "receipt_id": { "type": "string" }
+      }
+    },
+
+    "provenanceRequired": {
+      "title": "400 PROVENANCE_REQUIRED",
+      "description": "An app may not write to the record without saying how it knows.",
+      "type": "object",
+      "required": ["status", "error"],
+      "properties": {
+        "status": { "const": "rejected" },
+        "error": { "const": "PROVENANCE_REQUIRED" },
+        "accepted_classes": {
+          "type": "array",
+          "items": { "enum": ["declared", "attested", "observed", "inferred"] }
+        }
+      }
+    },
+
+    "classRejected": {
+      "title": "403 CLASS_NOT_PERMITTED",
+      "description": "Rule 1. The requested class exceeds the evidence, or exceeds what this writer may assert. Reading an inferred field and re-proposing the result as observed lands here.",
+      "type": "object",
+      "required": ["status", "error", "requested", "maximum"],
+      "properties": {
+        "status": { "const": "rejected" },
+        "error": { "const": "CLASS_NOT_PERMITTED" },
+        "requested": { "enum": ["declared", "attested", "observed", "inferred"] },
+        "maximum": { "enum": ["attested", "observed", "inferred"] },
+        "reason": { "type": "string" }
+      }
+    },
+
+    "quarantined": {
+      "title": "409 QUARANTINED",
+      "description": "Rule 3. The value falls in a sensitive category. It is not written, not shared, and not readable by any app under any grant. Released alone with its own purpose, or not at all.",
+      "type": "object",
+      "required": ["status", "category", "shared", "readable_by_apps", "bundling", "auto_delete_at"],
+      "properties": {
+        "status": { "const": "quarantined" },
+        "category": {
+          "type": "string",
+          "description": "Sensitive class. Covers the usual special categories plus a de facto list that statutory lists tend to miss.",
+          "enum": [
+            "sensitive.health",
+            "sensitive.sexual_orientation",
+            "sensitive.religion",
+            "sensitive.political_opinion",
+            "sensitive.union_membership",
+            "sensitive.biometric",
+            "sensitive.race_ethnicity",
+            "sensitive.immigration_status",
+            "sensitive.financial_distress",
+            "sensitive.pregnancy_fertility",
+            "sensitive.criminal_record",
+            "sensitive.addiction_recovery",
+            "sensitive.bereavement",
+            "sensitive.job_seeking",
+            "sensitive.minor"
+          ]
+        },
+        "shared": { "const": false },
+        "readable_by_apps": { "const": false },
+        "bundling": { "const": "prohibited" },
+        "auto_delete_at": {
+          "type": "string",
+          "description": "Untouched items are forgotten, not archived. A retained rejection pile would be the most sensitive object in the system."
+        }
+      }
+    }
+  }
+}

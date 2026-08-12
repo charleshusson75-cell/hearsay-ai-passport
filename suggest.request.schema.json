@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/hearsay/suggest.request.schema.json",
+  "title": "AI Passport suggest request, with provenance",
+  "description": "Proposed shape for the existing suggest endpoint. The only addition to what ships today is a required provenance class plus the evidence fields that each class implies.",
+  "type": "object",
+  "required": ["field", "value", "provenance"],
+  "additionalProperties": false,
+
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Dotted path into the passport namespace, e.g. taste.music or health.conditions.",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+    },
+    "value": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "provenance": {
+      "type": "string",
+      "description": "How the writer knows this. A class is a claim about evidence, not about truth.",
+      "enum": ["declared", "attested", "observed", "inferred"]
+    },
+    "source_app": {
+      "type": "string",
+      "description": "Identifier of the app proposing the write."
+    },
+    "attestor": {
+      "type": "string",
+      "description": "Identifier of the third party asserting the claim. Only meaningful for attested."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Detached signature from the attestor. Reserved. Not implemented in v1."
+    },
+    "derived_from": {
+      "type": "array",
+      "description": "Connector-scoped evidence identifiers this conclusion was drawn from. Visible to the holder, never returned to a requesting app.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "ttl": {
+      "type": "string",
+      "description": "ISO 8601 duration. Inferred values expire. Renewal requires evidence from a source the original write did not use.",
+      "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?$"
+    }
+  },
+
+  "allOf": [
+    {
+      "$comment": "Rule 1, no upward laundering. Only the holder may write at declared. An app that reads an inferred field and draws a conclusion may not re-propose it as observed or attested; a write inherits the lowest class among its inputs, enforced server-side against the derived_from graph.",
+      "if": { "properties": { "provenance": { "const": "declared" } }, "required": ["provenance"] },
+      "then": { "not": { "required": ["source_app"] } }
+    },
+    {
+      "if": { "properties": { "provenance": { "const": "observed" } }, "required": ["provenance"] },
+      "then": { "required": ["source_app", "derived_from"] }
+    },
+    {
+      "if": { "properties": { "provenance": { "const": "attested" } }, "required": ["provenance"] },
+      "then": { "required": ["attestor"] }
+    },
+    {
+      "$comment": "Rule 2, inferences decay. An inferred write is inadmissible without its evidence, its confidence and its expiry.",
+      "if": { "properties": { "provenance": { "const": "inferred" } }, "required": ["provenance"] },
+      "then": { "required": ["source_app", "derived_from", "confidence", "ttl"] }
+    }
+  ],
+
+  "examples": [
+    {
+      "field": "health.conditions",
+      "value": "chronic sleep condition",
+      "provenance": "inferred",
+      "source_app": "app_sleepcoach_v2",
+      "derived_from": ["whoop.hrv_30d", "calendar.cancellations_30d"],
+      "confidence": 0.61,
+      "ttl": "P30D"
+    },
+    {
+      "field": "taste.workwear",
+      "value": "prefers navy over black",
+      "provenance": "inferred",
+      "source_app": "app_shop_v1",
+      "derived_from": ["purchases.apparel_12m"],
+      "confidence": 0.78,
+      "ttl": "P180D"
+    }
+  ]
+}

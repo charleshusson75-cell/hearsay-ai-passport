@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/hearsay/field.read.schema.json",
+  "title": "What a requesting app receives, and what a retraction looks like",
+  "description": "The class and the age travel with the value. The evidence never does. A requesting app needs enough to decide how much weight to give a value, and not enough to reconstruct the holder's private signals.",
+
+  "type": "object",
+  "properties": {
+    "field": { "$ref": "#/$defs/fieldValue" },
+    "retraction": { "$ref": "#/$defs/retraction" }
+  },
+
+  "$defs": {
+    "fieldValue": {
+      "type": "object",
+      "required": ["value", "provenance", "asserted_at"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "string" },
+        "provenance": { "enum": ["declared", "attested", "observed", "inferred"] },
+        "asserted_at": { "type": "string", "format": "date" },
+        "expires": { "type": ["string", "null"], "format": "date" }
+      },
+      "$comment": "Note what is absent: derived_from, confidence and source_app are holder-only. additionalProperties is false so an implementation cannot quietly widen this.",
+      "examples": [
+        {
+          "value": "prefers morning-free scheduling",
+          "provenance": "inferred",
+          "asserted_at": "2026-07-02",
+          "expires": "2026-08-01"
+        }
+      ]
+    },
+
+    "retraction": {
+      "type": "object",
+      "description": "Rule 4. Emitted to every app in the field's receipt log when the holder edits or deletes. A retraction cannot un-read data and cannot un-train a model. It stops future reads, timestamps the withdrawal, and makes any use after that timestamp a documented breach rather than a dispute about memory.",
+      "required": ["field", "retracted_at", "recipients"],
+      "properties": {
+        "field": { "type": "string" },
+        "retracted_at": { "type": "string", "format": "date-time" },
+        "reason": { "enum": ["corrected", "deleted", "expired"] },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["app", "state"],
+            "properties": {
+              "app": { "type": "string" },
+              "state": {
+                "enum": ["purged", "acknowledged", "no_response"],
+                "description": "Visible to the holder per app. Apps that ignore retractions lose write access; the enforcement lever is market access, not cryptography."
+              },
+              "retention_until": { "type": ["string", "null"], "format": "date" }
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "field": "knowledge.constraints",
+          "retracted_at": "2026-08-11T09:02:00Z",
+          "reason": "corrected",
+          "recipients": [
+            { "app": "app_recruiter_v3", "state": "purged", "retention_until": null },
+            { "app": "app_insurequote_v1", "state": "acknowledged", "retention_until": "2026-09-10" },
+            { "app": "app_travel_v2", "state": "no_response", "retention_until": null }
+          ]
+        }
+      ]
+    }
+  }
+}
