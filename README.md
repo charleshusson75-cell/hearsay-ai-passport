@@ -6,8 +6,8 @@ The AI Passport stores a model's guess about you the same way it stores what you
 
 Submitted to the [AI Passport Ideathon](https://ai-passport-ideathon.devpost.com) by Egoist Machines. **Identity track, Build lane.**
 
-- Devpost project: *(add link once submitted)*
-- Walkthrough video: *(add unlisted YouTube link)*
+- Devpost project: https://devpost.com/software/hearsay-i6w9sh
+- Walkthrough video: https://www.youtube.com/watch?v=UrbMqHbBhRY
 - One-page deck: [`artifact/hearsay-deck.pdf`](artifact/hearsay-deck.pdf)
 
 ---
