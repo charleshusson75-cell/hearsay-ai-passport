@@ -4,7 +4,8 @@
 
 The AI Passport stores a model's guess about you the same way it stores what you typed. Hearsay adds a provenance class to every field, blocks apps from upgrading a guess into a fact, quarantines inferences that land in sensitive categories, and makes a correction travel to every app that already read the old value.
 
-Submitted to the [AI Passport Ideathon](https://ai-passport-ideathon.devpost.com) by Egoist Machines. **Identity track, Build lane.**
+Winner, Identity track, AI Passport Ideathon (Egoist Machines, YC S26), August 2026.
+AI Passport is a personal context record that AI apps read from and write to, with the user approving each request. We found its write path has one control where the read path has five, and specified the fix. This repo is a specification (JSON Schemas, threat model, deck), not a running app.
 
 - Devpost project: https://devpost.com/software/hearsay-i6w9sh
 - Walkthrough video: https://www.youtube.com/watch?v=UrbMqHbBhRY
